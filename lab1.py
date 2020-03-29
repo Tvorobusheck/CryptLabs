@@ -5,11 +5,10 @@ if __name__ == "__main__":
     cypher = my.RSAUser()
     print(cypher)
 
-    m = int(input("Input m (lower than 1e5): "))
-    if m >= int(1e5):
-        raise Exception("Wrong input number")
+    m = int(input("Введите m:"))
     e = cypher.encrypt(m)
-    print("Encrypted m is ", e)
+    print("Зашифрованное m = ", e)
     m_decrypted = cypher.decrypt(e)
-    print("Decrypted e is ", m_decrypted)
-
+    print("Расшифрованное e = ", m_decrypted)
+    #
+    # my.calc_primes(int(1e3))

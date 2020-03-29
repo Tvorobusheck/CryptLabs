@@ -1,7 +1,8 @@
 import random
-import primes
+# import primes
 
 
+# быстрое возведение в степень
 def fast_pow(num: int, degree: int, mod: object = None) -> int:
     if degree < 0 or mod is not None and mod < 0:
         raise Exception("Negative number")
@@ -23,6 +24,7 @@ def fast_pow(num: int, degree: int, mod: object = None) -> int:
                 return next_val * next_val
 
 
+# поиск НОД
 def gcd(a: int, b: int) -> int:
     if a < b:
         t = a
@@ -34,24 +36,35 @@ def gcd(a: int, b: int) -> int:
         return gcd(a % b, b)
 
 
-def calc_primes(n: int) -> None:
-    primes_filename = "primes.py"
+# расчет простых чисел
+def is_prime(n: int, r: int = 50):
+    if n < 1000:
+        raise Exception("Too small number for Miller-Rabin test")
+    s = 0
+    d = n - 1
+    while d % 2 == 0:
+        d >>= 1
+        s += 1
+    assert (2 ** s * d == n - 1)
 
-    is_prime = [i >= 2 for i in range(n)]
-    primes = []
-    for i in range(2, n):
-        if is_prime[i]:
-            j = 2
-            while i * j < n:
-                is_prime[i * j] = False
-                j += 1
-            primes.append(i)
+    def trial_composite(a):
+        if fast_pow(a, d, n) == 1:
+            return False
+        for i in range(s):
+            if fast_pow(a, 2 ** i * d, n) == n - 1:
+                return False
+        return True
 
-    with open(primes_filename, "w") as primes_out:
-        primes_out.write("primes = " + str(primes))
+    for i in range(r):
+        a = random.randrange(2, n)
+        if trial_composite(a):
+            return False
+
+    return True
 
 
-def gcdex(a: int, b: int, x: int, y: int) -> int:
+# расширенный алгоритм Евклида
+def gcdex(a: int, b: int, x: int, y: int) -> (int, int, int):
     if a == 0:
         x = 0
         y = 1
@@ -62,6 +75,7 @@ def gcdex(a: int, b: int, x: int, y: int) -> int:
     return d, x, y
 
 
+# поиск обратного по модулю
 def find_multi_inversion(num: int, mod: int) -> int:
     d, x, y = gcdex(num, mod, 0, 0)
     return (x % mod + mod) % mod
@@ -71,8 +85,16 @@ class RSAUser:
 
     def __init__(self, name="User"):
         self.name = name
-        self.p = random.choice([num for num in primes.primes])
-        self.q = random.choice([num for num in primes.primes if int(1e5) < num * self.p])
+        for i in range(random.randint(int(1e5), int(1e8)), int(1e9)):
+            if is_prime(i):
+                self.p = i
+                break
+        for i in range(self.p + 1, int(1e9)):
+            if is_prime(i):
+                self.q = i
+                break
+        # self.p = 5119
+        # self.q = 5659
         # print(self.p, self.q)
         self.n = self.p * self.q  # e < n
         self.f = (self.p - 1) * (self.q - 1)
@@ -81,8 +103,9 @@ class RSAUser:
             if gcd(a, self.f) == 1:
                 self.d = a
                 break
-        self.c = find_multi_inversion(self.d, self.f)   # f != n, to find c you must get f, which means to get all
-                                                        # prime multipliers of n (big number)
+        if self.d == 0:
+            raise Exception("D = 0")
+        self.c = find_multi_inversion(self.d, self.f)
 
     # encrypt by open keys d and n
     def encrypt(self, m: int) -> int:
@@ -99,11 +122,16 @@ class RSAUser:
 class ElgamalUser:
 
     def __init__(self):
-        prime = [num for num in primes.primes if num >= int(1e5)]
 
-        self.p = random.choice(prime)
+        for i in range(random.randint(int(1e5), int(1e8)), int(1e9)):
+            if is_prime(i):
+                self.p = i
+                break
+
         q = (self.p - 1) // 2
-        for g in [num for num in primes.primes if 1 < num < self.p - 1]:
+        for g in range(2 + 1000, self.p - 1):
+            if not is_prime(g):
+                continue
             if fast_pow(g, q, self.p) != 1:
                 self.g = g
                 break
