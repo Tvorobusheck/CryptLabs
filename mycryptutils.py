@@ -121,9 +121,9 @@ class RSAUser:
 
 class ElgamalUser:
 
-    def __init__(self):
+    def __init__(self, low_limit: int =  int(1e14)):
 
-        for i in range(random.randint(int(1e5), int(1e8)), int(1e9)):
+        for i in range(random.randint(low_limit, low_limit * 2), low_limit * 10):
             if is_prime(i):
                 self.p = i
                 break
